@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -8,6 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {FontAwesomeTestingModule} from "@fortawesome/angular-fontawesome/testing";
 import { VmSelectionComponent } from './vm-selection/vm-selection.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import {AuthService} from "./auth.service";
 
 @NgModule({
   declarations: [
@@ -20,9 +22,10 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    FontAwesomeTestingModule
+    FontAwesomeTestingModule,
+    HttpClientModule
   ],
-  providers: [],
+  providers: [AuthService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
