@@ -25,6 +25,8 @@ const computeClient = new ComputeManagementClient(credentials, subscriptionId);
 
 const networkClient = new NetworkManagementClient(credentials, subscriptionId);
 
+
+
 // VM images information
 const vmImages = {
   linux: {
@@ -34,9 +36,9 @@ const vmImages = {
     version: 'latest'
   },
   debian: {
-    publisher: 'credativ',
-    offer: 'Debian',
-    sku: '10',
+    publisher: 'Debian',
+    offer: 'debian-11',
+    sku: '11',
     version: 'latest'
   },
   windows: {
@@ -48,9 +50,17 @@ const vmImages = {
 };
 
 // Generate a unique VM name
-function generateVMName(baseName) {
-  const timestamp = Date.now();
-  return `${baseName}-${timestamp}`;
+function generateVMName(baseName, vmType) {
+    const timestamp = Date.now().toString();
+    const isWindows = vmType === 'windows';
+    let name = `${baseName}-${timestamp.slice(-6)}`; // Utilisez une partie du timestamp pour garantir l'unicité
+
+    if (isWindows) {
+        // Pour Windows, assurez-vous que le nom ne dépasse pas 15 caractères
+        name = name.length > 15 ? name.slice(0, 15) : name;
+    }
+
+    return name;
 }
 
 // create Vnet and Subnet
@@ -90,9 +100,10 @@ async function setupAndCreateVM(vmType, res) {
   const subnetName = "MonSubnet";
   const vnetAddressPrefix = "10.0.0.0/16";
   const subnetAddressPrefix = "10.0.1.0/24";
+
   
   // unique name 
-  const uniqueName = generateVMName(`cloudPortal-${vmType}`);
+  const uniqueName = generateVMName("cloudPortal", vmType);
   const networkInterfaceName = `${uniqueName}-nic`;
 
   try {
