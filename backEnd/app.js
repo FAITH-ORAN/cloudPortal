@@ -4,29 +4,30 @@ const session = require('express-session');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-
 const { setupAndCreateVM } = require('./vm');
 
 const app = express();
 
+// Middleware configuration
 app.use(cors({
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost:4200'], // Adjust this as per your frontend app's URL
     credentials: true,
 }));
 
 app.use(session({
-    secret: 'secretKey',
+    secret: 'secretKey', // Use a more secure secret in production
     resave: false,
     saveUninitialized: true,
 }));
 
 app.use(express.json());
 
+// Load users data
 const usersFilePath = path.join(__dirname, 'users.json');
 const usersData = fs.readFileSync(usersFilePath);
 const users = JSON.parse(usersData).users;
 
-//login 
+// Login endpoint
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -38,15 +39,13 @@ app.post('/login', (req, res) => {
     }
 });
 
-
-//logout 
+// Logout endpoint
 app.post('/logout', (req, res) => {
     req.session.destroy();
     res.send('Logged out');
 });
 
-
-//session
+// Session check endpoint
 app.get('/session', (req, res) => {
     if (req.session.user) {
         res.json({ loggedIn: true, user: req.session.user });
@@ -55,57 +54,45 @@ app.get('/session', (req, res) => {
     }
 });
 
-
-//verify if user is logged in
+// Middleware to check authentication
 function isAuthenticated(req, res, next) {
     if (req.session.user) {
-        return next();
+        next();
+    } else {
+        console.log('Access denied: user is not authenticated');
+        res.status(403).send('Unauthorized');
     }
-    console.log(`Access denied: user is not authenticated`);
-    res.status(403).send('Unauthorized');
 }
 
-app.get('/vm-selection', isAuthenticated, (req, res) => {
-    res.send('This is protected content');
-});
-
-
-//verify if the user have enough credit and have appropriate profile
+// Middleware to check if the user can create a VM
 function canCreateVM(req, res, next) {
-    const user = req.session.user;
     const { vmType } = req.body;
+    const user = req.session.user;
 
     if (user.credits <= 0) {
         return res.status(403).send('You do not have enough credits to create a VM.');
     }
 
-    if (user.roles === 'USER' && vmType !== 'linux') {
-        return res.status(403).send('As a USER, you are only allowed to create Linux VMs.');
+    if (user.roles === 'USER' && vmType !== 'ubuntu') {
+        return res.status(403).send('As a USER, you are only allowed to create Ubuntu VMs.');
     }
 
-    if (user.roles === 'SUPERUSER') {
-        // SUPERUSER can create any type of VM, no further checks needed
-        return next();
-    }
-
-    // If the user is a USER and trying to create a linux VM, or any checks specific to other roles.
     next();
 }
 
-
-
+// Endpoint to create a VM
 app.post('/create-vm', isAuthenticated, canCreateVM, async (req, res) => {
-  const { vmType } = req.body; // 'linux', 'debian', or 'windows'
-  console.log(`Received request to setup and create a ${vmType} VM`);
-  
-  try {
-    await setupAndCreateVM(vmType, res); 
-    console.log(`Setup and VM creation process started for a ${vmType} VM`);
-  } catch (error) {
-    console.error(`Error during setup and VM creation: ${error.message}`);
-    res.status(500).send(error.message);
-  }
+    const { vmType } = req.body; // 'ubuntu', 'debian', or 'windows'
+    
+    try {
+        await setupAndCreateVM(vmType, res); 
+        console.log(`VM creation process initiated for a ${vmType} VM.`);
+    } catch (error) {
+        console.error(`VM setup and creation error: ${error.message}`);
+        res.status(500).send(error.message);
+    }
 });
 
-const PORT = 3000;
+// Server start
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

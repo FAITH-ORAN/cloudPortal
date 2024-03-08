@@ -4,26 +4,25 @@
     <button (click)="logout()" class="mb-4 py-2 px-4 bg-red-500 text-white rounded-md flex justify-end">Logout</button>
   </div>
 
-  <!-- Affiche le contenu seulement si l'utilisateur a des crédits -->
+  <!-- Diplay just if user have enough credit -->
   <div *ngIf="credits > 0">
     <h2 class="text-2xl font-bold mb-4">Choose your environment VM</h2>
     <div class="grid grid-cols-3 gap-4">
-      <!-- Toujours montrer Linux si l'utilisateur a des crédits -->
+      <!-- Always show linuxif user have credits -->
       <div class="p-5 shadow-lg rounded-lg hover:shadow-xl transition bg-white">
-        <button class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Linux</button>
+        <button (click)="createVM('linux')" class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Linux</button>
       </div>
 
-      <!-- Conditionnellement montrer Debian et Windows basé sur le rôle 'SUPERUSER' -->
+      <!-- Give all access to SUPERUSER-->
       <div *ngIf="roles.includes('SUPERUSER')" class="p-5 shadow-lg rounded-lg hover:shadow-xl transition bg-white">
-        <button class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Debian</button>
+        <button (click)="createVM('debian')" class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Debian</button>
       </div>
       <div *ngIf="roles.includes('SUPERUSER')" class="p-5 shadow-lg rounded-lg hover:shadow-xl transition bg-white">
-        <button class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Windows</button>
+        <button (click)="createVM('windows')" class="w-full h-full text-lg font-semibold py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 transition duration-150 ease-in-out">Windows</button>
       </div>
     </div>
   </div>
 
-  <!-- Message quand l'utilisateur n'a pas de crédits -->
   <div *ngIf="credits === 0">
     <p class="text-red-500">Sorry, you cannot see the VMs because you have 0 credits.</p>
   </div>

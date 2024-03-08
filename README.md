@@ -1,31 +1,67 @@
-# CloudPortal Project
+# CloudPortal Project Documentation
 
-Contain 2 folders one for frontEnd and the second for backEnd
+Welcome to the CloudPortal project! This document guides you through setting up both the front-end and back-end components of the project, as well as configuring it with your Azure account details.
 
-# user & password to login
+## Overview
 
-- username: user1, password: password1 => user without credit
-- username: user2, password: password2 => user with access to one machine
-- username: user3, password: password3 => user with all access
+The CloudPortal project consists of two main parts:
 
-# FrontEnd => Angular
+- Front-End: Built with Angular
+- Back-End: Built with Node.js
 
-node version => v21.2.0
-npm version => 10.2.4
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.1.4.
+## Pre-requisites
 
-- run => npm i (to install all dependancies)
-- run => ng serve (to start project Navigate to `http://localhost:4200/` )
+Before you start, ensure you have the following installed:
 
-# BackEnd => nodeJs
+- Node.js: Version 21.2.0 or above
+- npm (Node Package Manager): Version 10.2.4 or above
+- Angular CLI: Version 15.1.4 or above
 
-File .env => In the backEnd Folder we have .env file you can put your own credentials
-AZURE_SUBSCRIPTION_ID=votre_subscription_id
-AZURE_TENANT_ID=votre_tenant_id
-AZURE_CLIENT_ID=votre_client_id
-AZURE_CLIENT_SECRET=votre_secret_key
+## User Credentials
 
-follow this steps:
+Use the following credentials to log into the application:
 
-- 1: run: npm i (install all dependencies)
-- 2: run : node start (to start the project)
+- User1:
+  Username: user1
+  Password: password1
+  Note: User without credit
+- User2:
+  Username: user2
+  Password: password2
+  Note: User with access to one machine
+- User3:
+  Username: user3
+  Password: password3
+  Note: User with all access
+
+## Setting Up the Front-End (Angular)
+
+To set up and run the front-end part of the project:
+
+1- Navigate to the front-end project directory.
+2- Install dependencies by running: npm i
+3- Start the project by running: ng serve
+4- Open a web browser and go to http://localhost:4200/ to view the application.
+
+## Setting Up the Back-End (Node.js)
+
+Before setting up the back-end, you will need to configure it with your Azure account details. This includes your Subscription ID, Application ID, and Secret. These details should be entered into the .env file located in the back-end folder.
+
+### Azure Configuration
+
+Open the .env file in the back-end project folder.
+Fill in the placeholders with your Azure credentials:
+
+AZURE_TENANT_ID=your_tenant_id_here
+AZURE_CLIENT_ID=your_client_id_here
+AZURE_CLIENT_SECRET=your_client_secret_here
+AZURE_SUBSCRIPTION_ID=your_subscription_id_here
+
+Ensure that you replace `your_tenant_id`, `your_client_id`, `your_client_secret`, and `your_subscription_id` with your actual Azure account details.
+
+### Running the Back-End
+
+1- Navigate to the back-end project directory.
+2- Install dependencies by running: npm i
+3- Start the project by running: node start
+4- The back-end server will start, and it will interact with your Azure account based on the credentials provided in the .env file.
