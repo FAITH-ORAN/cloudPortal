@@ -3,6 +3,7 @@ import { faCloud } from '@fortawesome/free-solid-svg-icons';
 import {Router} from "@angular/router";
 import { AuthService} from "../auth.service";
 import {HttpClient} from "@angular/common/http";
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -16,18 +17,17 @@ export class LoginComponent {
 
   faCloud = faCloud;
   model: any = {};
-  constructor(private router: Router,private authService: AuthService,private http: HttpClient,) { }
+  constructor(private router: Router,private authService: AuthService,private http: HttpClient,private toastr: ToastrService) { }
 
 
   onSubmit() {
     this.authService.login(this.model.username, this.model.password).subscribe({
       next: (response) => {
-        console.log('Login successful', response);
         this.router.navigate(['/vm-selection']);
         this.loginError = false;
       },
       error: (error) => {
-        console.error('Login failed', error);
+        this.toastr.error('username or password are incorrect');
         this.loginError = true;
       }
     });

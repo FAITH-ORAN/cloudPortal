@@ -2,6 +2,10 @@
 
 Welcome to the CloudPortal project! This document guides you through setting up both the front-end and back-end components of the project, as well as configuring it with your Azure account details.
 
+## Github Repository
+
+<a href="https://github.com/FAITH-ORAN/cloudPortal">Link to Repo</a>
+
 ## Overview
 
 The CloudPortal project consists of two main parts:

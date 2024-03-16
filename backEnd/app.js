@@ -18,6 +18,11 @@ app.use(session({
     secret: 'secretKey', // Use a more secure secret in production
     resave: false,
     saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Set to true if using https
+        sameSite: 'lax' // or 'none' if you want to allow cross-site cookies
+    }
 }));
 
 app.use(express.json());
@@ -33,6 +38,7 @@ app.post('/login', (req, res) => {
     const user = users.find(u => u.username === username && u.password === password);
     if (user) {
         req.session.user = { id: user.id, username: user.username, roles: user.roles, credits: user.credits };
+        
         res.json({ username: user.username, roles: user.roles, credits: user.credits });
     } else {
         res.status(401).send('Invalid credentials');
@@ -56,6 +62,7 @@ app.get('/session', (req, res) => {
 
 // Middleware to check authentication
 function isAuthenticated(req, res, next) {
+    console.log(req.session)
     if (req.session.user) {
         next();
     } else {

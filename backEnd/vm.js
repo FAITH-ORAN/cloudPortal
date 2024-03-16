@@ -41,13 +41,27 @@ function generateVMName(baseName, vmType) {
     return name;
 }
 
+async function createPublicIP(resourceGroupName, location, publicIpName) {
+    console.log(`Creating public IP: ${publicIpName}`);
+    const publicIpParameters = {
+        location: location,
+        publicIPAllocationMethod: 'Dynamic',
+        idleTimeoutInMinutes: 4,
+        sku: { name: 'Basic' },
+    };
+    await networkClient.publicIPAddresses.beginCreateOrUpdateAndWait(resourceGroupName, publicIpName, publicIpParameters);
+    console.log(`Public IP ${publicIpName} created successfully.`);
+    return `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/${publicIpName}`;
+}
+
+
 // Creates a new Azure resource group
 async function createResourceGroup(location) {
     const resourceGroupName = `MyResourceGroup-${Date.now()}`;
     console.log(`Creating resource group: ${resourceGroupName} in ${location}`);
     await resourceClient.resourceGroups.createOrUpdate(resourceGroupName, { location });
     console.log(`Resource group ${resourceGroupName} created successfully.`);
-    return resourceGroupName;
+    return resourceGroupName; // Retourne le nom unique pour utilisation dans les autres fonctions
 }
 
 // Creates a Virtual Network and a Subnet
@@ -61,10 +75,14 @@ async function createVNetAndSubnet(resourceGroupName, location, vnetName, subnet
 }
 
 // Creates a network interface
-async function createNetworkInterface(resourceGroupName, location, networkInterfaceName, subnetId) {
+async function createNetworkInterface(resourceGroupName, location, networkInterfaceName, subnetId, publicIpAddressId) {
     const nicParameters = {
         location: location,
-        ipConfigurations: [{ name: `${networkInterfaceName}-ipConfig`, subnet: { id: subnetId } }]
+        ipConfigurations: [{
+            name: `${networkInterfaceName}-ipConfig`,
+            subnet: { id: subnetId },
+            publicIPAddress: { id: publicIpAddressId }, // Ajoutez ceci
+        }]
     };
     await networkClient.networkInterfaces.beginCreateOrUpdateAndWait(resourceGroupName, networkInterfaceName, nicParameters);
     console.log('Network interface created successfully.');
@@ -82,7 +100,9 @@ async function setupAndCreateVM(vmType, res) {
         const resourceGroupName = await createResourceGroup(location);
         await createVNetAndSubnet(resourceGroupName, location, vnetName, subnetName);
         const subnetId = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}`;
-        await createNetworkInterface(resourceGroupName, location, networkInterfaceName, subnetId);
+        const publicIpName = `${uniqueName}-publicIp`;
+        const publicIpAddressId = await createPublicIP(resourceGroupName, location, publicIpName);
+        await createNetworkInterface(resourceGroupName, location, networkInterfaceName, subnetId, publicIpAddressId);
 
         const nicId = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Network/networkInterfaces/${networkInterfaceName}`;
         await createVM(vmType, resourceGroupName, location, uniqueName, nicId, res);
@@ -113,7 +133,7 @@ async function createVM(vmType, resourceGroupName, location, vmName, nicId, res)
         // Logic to delete the VM after a specified time
         setTimeout(async () => {
             console.log(`Initiating deletion for VM: ${vmName}`);
-            await deleteVMAndAssociatedResources(resourceGroupName, vmName, nicId);
+            await deleteResourceGroupAndResources(resourceGroupName);
         }, 600000); // 10 minutes
         res.status(201).send(result);
     } catch (error) {
@@ -122,20 +142,18 @@ async function createVM(vmType, resourceGroupName, location, vmName, nicId, res)
     }
 }
 
-// Deletes a VM and its associated resources
-async function deleteVMAndAssociatedResources(resourceGroupName, vmName, nicId) {
+// Deletes a VM, its associated resources, and the resource group
+async function deleteResourceGroupAndResources(resourceGroupName) {
     try {
-        console.log(`Deleting VM: ${vmName}`);
-        await computeClient.virtualMachines.beginDeleteAndWait(resourceGroupName, vmName);
-        console.log(`Deleting NIC: ${nicId}`);
-        await networkClient.networkInterfaces.beginDeleteAndWait(resourceGroupName, nicId.split('/').pop());
-        console.log(`All associated resources for VM: ${vmName} have been deleted.`);
+        console.log(`Initiating deletion for resource group: ${resourceGroupName}`);
+        await resourceClient.resourceGroups.beginDeleteAndWait(resourceGroupName);
+        console.log(`Resource group ${resourceGroupName} has been deleted.`);
     } catch (error) {
-        console.error(`Error deleting resources for VM: ${vmName}`, error);
+        console.error(`Error deleting resource group ${resourceGroupName}:`, error);
     }
 }
 
 module.exports = {
     setupAndCreateVM,
-    deleteVMAndAssociatedResources
+    deleteResourceGroupAndResources
 };
