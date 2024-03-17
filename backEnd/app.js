@@ -92,8 +92,9 @@ app.post('/create-vm', isAuthenticated, canCreateVM, async (req, res) => {
     const { vmType } = req.body; // 'ubuntu', 'debian', or 'windows'
     
     try {
-        await setupAndCreateVM(vmType, res); 
-        console.log(`VM creation process initiated for a ${vmType} VM.`);
+        const response = await setupAndCreateVM(vmType);
+        console.log("app.js ===> ", response.connectionInfo);
+        res.status(201).send(response);
     } catch (error) {
         console.error(`VM setup and creation error: ${error.message}`);
         res.status(500).send(error.message);

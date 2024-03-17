@@ -55,6 +55,11 @@ async function createPublicIP(resourceGroupName, location, publicIpName) {
 }
 
 
+async function getPublicIPAddress(resourceGroupName, publicIpName) {
+    const publicIP = await networkClient.publicIPAddresses.get(resourceGroupName, publicIpName);
+    return publicIP.ipAddress;
+}
+
 // Creates a new Azure resource group
 async function createResourceGroup(location) {
     const resourceGroupName = `MyResourceGroup-${Date.now()}`;
@@ -88,6 +93,32 @@ async function createNetworkInterface(resourceGroupName, location, networkInterf
     console.log('Network interface created successfully.');
 }
 
+async function createVM(vmType, resourceGroupName, location, vmName, nicId) {
+    const imageRef = vmImages[vmType];
+    if (!imageRef) {
+        throw new Error('Type of VM is invalid');
+    }
+
+    const vmParameters = {
+        location,
+        hardwareProfile: { vmSize: 'Standard_B1s' },
+        storageProfile: { imageReference: imageRef, osDisk: { createOption: 'fromImage' } },
+        osProfile: { computerName: vmName, adminUsername, adminPassword },
+        networkProfile: { networkInterfaces: [{ id: nicId, primary: true }] }
+    };
+
+    const result = await computeClient.virtualMachines.beginCreateOrUpdateAndWait(resourceGroupName, vmName, vmParameters);
+    console.log(`VM ${vmName} created successfully.`);
+
+    // Planifiez la suppression de la VM après 10 minutes
+    setTimeout(async () => {
+        console.log(`Initiating deletion for VM: ${vmName}`);
+        await deleteResourceGroupAndResources(resourceGroupName);
+    }, 600000); // 10 minutes
+
+    return result;
+}
+
 // Sets up and creates a VM
 async function setupAndCreateVM(vmType, res) {
     const location = "francecentral";
@@ -105,43 +136,38 @@ async function setupAndCreateVM(vmType, res) {
         await createNetworkInterface(resourceGroupName, location, networkInterfaceName, subnetId, publicIpAddressId);
 
         const nicId = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Network/networkInterfaces/${networkInterfaceName}`;
-        await createVM(vmType, resourceGroupName, location, uniqueName, nicId, res);
+        await createVM(vmType, resourceGroupName, location, uniqueName, nicId);
+
+
+        const ipAddress = await getPublicIPAddress(resourceGroupName, publicIpName);
+        
+        // Préparez ici les informations de connexion selon le type de VM
+        let connectionInfo;
+        if (vmType === 'windows') {
+            connectionInfo = {
+                method: 'RDP',
+                ipAddress,
+                username: adminUsername,
+            };
+        } else { // supposant linux
+            connectionInfo = {
+                method: 'SSH',
+                ipAddress,
+                username: adminUsername,
+                command: `ssh ${adminUsername}@${ipAddress}`,
+            };
+
+            console.log( "vm ====>>> "+connectionInfo)
+        }
+          return {
+            message: "VM créée avec succès.",
+            connectionInfo
+        };
     } catch (error) {
         console.error("Errors in VM configuration:", error);
         res.status(500).send('Error of creation azure resources.');
     }
 }
-
-// Creates a virtual machine
-async function createVM(vmType, resourceGroupName, location, vmName, nicId, res) {
-    const imageRef = vmImages[vmType];
-    if (!imageRef) {
-        return res.status(400).send('Type of VM is invalid');
-    }
-
-    const vmParameters = {
-        location,
-        hardwareProfile: { vmSize: 'Standard_B1s' },
-        storageProfile: { imageReference: imageRef, osDisk: { createOption: 'fromImage' } },
-        osProfile: { computerName: vmName, adminUsername, adminPassword },
-        networkProfile: { networkInterfaces: [{ id: nicId, primary: true }] }
-    };
-
-    try {
-        const result = await computeClient.virtualMachines.beginCreateOrUpdateAndWait(resourceGroupName, vmName, vmParameters);
-        console.log(`VM ${vmName} created successfully.`);
-        // Logic to delete the VM after a specified time
-        setTimeout(async () => {
-            console.log(`Initiating deletion for VM: ${vmName}`);
-            await deleteResourceGroupAndResources(resourceGroupName);
-        }, 600000); // 10 minutes
-        res.status(201).send(result);
-    } catch (error) {
-        console.error(`Error creating VM of type ${vmType}:`, error);
-        res.status(500).send('Error of creating VM');
-    }
-}
-
 // Deletes a VM, its associated resources, and the resource group
 async function deleteResourceGroupAndResources(resourceGroupName) {
     try {

@@ -38,13 +38,24 @@ Use the following credentials to log into the application:
   Password: password3
   Note: User with all access
 
+## Connection to VM from terminal
+
+The username and password are declared in the file .env,
+if you want to change theme you can by putting a new credentials in:
+
+- VM_ADMIN_USERNAME
+- VM_ADMIN_PASSWORD
+
+the default value of username is => defaultAdminUsername
+the default value of password is => defaultAdminPassword123!
+
 ## Setting Up the Front-End (Angular)
 
 To set up and run the front-end part of the project:
 
 1- Navigate to the front-end project directory.
-2- Install dependencies by running: npm i
-3- Start the project by running: ng serve
+2- Install dependencies by running: `npm i`
+3- Start the project by running: `ng serve`
 4- Open a web browser and go to http://localhost:4200/ to view the application.
 
 ## Setting Up the Back-End (Node.js)
@@ -66,6 +77,6 @@ Ensure that you replace `your_tenant_id`, `your_client_id`, `your_client_secret`
 ### Running the Back-End
 
 1- Navigate to the back-end project directory.
-2- Install dependencies by running: npm i
-3- Start the project by running: node start
+2- Install dependencies by running: `npm i`
+3- Start the project by running: `npm start`
 4- The back-end server will start, and it will interact with your Azure account based on the credentials provided in the .env file.
