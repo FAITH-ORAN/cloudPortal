@@ -148,12 +148,14 @@ async function setupAndCreateVM(vmType, res) {
                 method: 'RDP',
                 ipAddress,
                 username: adminUsername,
+                password: adminPassword,
             };
         } else { // supposant linux
             connectionInfo = {
                 method: 'SSH',
                 ipAddress,
                 username: adminUsername,
+                password: adminPassword,
                 command: `ssh ${adminUsername}@${ipAddress}`,
             };
 
@@ -182,4 +184,4 @@ async function deleteResourceGroupAndResources(resourceGroupName) {
 module.exports = {
     setupAndCreateVM,
     deleteResourceGroupAndResources
-};
+}
